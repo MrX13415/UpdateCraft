@@ -1,0 +1,21 @@
+main: de.MrX13415.UpdateCraft.UpdateCraft
+
+name: UpdateCraft
+version: 0.0.2.1
+description: Update-tool for Bukkit
+author: MrX13415
+website: none
+
+commands:
+  updatecraft:
+    aliases: [uc, upc, udc, ucraft]
+    description: UpdateCraft
+    usage: |
+           UpdateCraft
+           /updatecraft database|download [create|clear|remove|update][rec|btea|dev|<buildno>] <buildno>
+
+  restart:
+    aliases: []
+    description: Restarts the server (like /stop but with start of the server again ...)
+    usage: |
+            /restart
