@@ -1,7 +1,13 @@
 package de.MrX13415.UpdateCraft.Database;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 
 import de.MrX13415.UpdateCraft.UpdateCraft;
 import de.MrX13415.UpdateCraft.Net.Download;
@@ -13,11 +19,13 @@ import de.MrX13415.UpdateCraft.Text.Text;
 
 public class BuildDatabase {
 
-	private ArrayList<Build> builds = new ArrayList<Build>();
+	private String buildDBPath = "plugins/UpdateCraft/";
+	
+	private ArrayList<Build> buildDBContent = new ArrayList<Build>();
 	private int pageCount = 1;
 	
 	public Build getBuild(int buildnummber){
-		for (Build build : builds) {
+		for (Build build : buildDBContent) {
 			if (build.getBuildnumber() == buildnummber) return build;
 		}
 		return null;
@@ -27,7 +35,7 @@ public class BuildDatabase {
 		int latestBuildNummber = 0;
 		Build latestBuild = null;
 		
-		for (Build build : builds) {
+		for (Build build : buildDBContent) {
 			if (build.getCannel() == cannal){
 				if (build.getBuildnumber() > latestBuildNummber){
 					latestBuildNummber = build.getBuildnumber();
@@ -53,7 +61,7 @@ public class BuildDatabase {
 			
 			@Override
 			public void run() {
-				if (reCreate) builds.clear();
+				if (reCreate) buildDBContent.clear();
 						
 				UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, 0));
 				
@@ -114,12 +122,12 @@ public class BuildDatabase {
 		int p1 = page.indexOf("<table class=\"versionsTable\">");
 		int p2 = page.indexOf("</table>", p1);
 		
-		String versionTable = page.substring(p1, p2);
-		
+		String versionTable = page.substring(p1, p2).trim();
+
 		//grep build infos out of the version table ...
 		int buildInfoIndex = 0;
 		String buildInfos = "";
-		
+
 		do{
 			try {
 				int buildInfoP1 = versionTable.indexOf("<tr class=\"chan-", buildInfoIndex);
@@ -127,14 +135,24 @@ public class BuildDatabase {
 				
 				buildInfoIndex = buildInfoP2;
 				
-				buildInfos = versionTable.substring(buildInfoP1, buildInfoP2);
-								
+				buildInfos = new String(versionTable.substring(buildInfoP1, buildInfoP2).trim());
+				
+				/*
+				 * WARNING: Bug work around:
+				 * 
+				 * Sometimes there are NULL chars (ASCII value 0) in the String
+				 * The Problem is: The length() function returns a higher value,
+				 * than the Text actually is ...
+				 * This removes this chars ... 
+				 */
+				buildInfos = buildInfos.replace(String.valueOf((char)0), "");
+
 				int bip1 = buildInfos.indexOf("<th><a href=\"");
 				int bip2 = buildInfos.indexOf("\">#", bip1);
 				bip1 = bip2;
-				bip2 = buildInfos.indexOf("</a></th>", bip2);
+				bip2 = buildInfos.indexOf("</a>", bip2);
 				String build = buildInfos.substring(bip1 + 3, bip2);
-				
+
 				bip1 = buildInfos.indexOf("<td>", bip2);
 				bip2 = buildInfos.indexOf("</td>", bip1);
 				String version = buildInfos.substring(bip1 + 4, bip2);
@@ -142,7 +160,7 @@ public class BuildDatabase {
 				bip1 = buildInfos.indexOf("<td><a href=\"", bip2);
 				bip2 = buildInfos.indexOf("\">", bip1);
 				bip1 = bip2;
-				bip2 = buildInfos.indexOf("</a></td>", bip2);
+				bip2 = buildInfos.indexOf("</a>", bip2);
 				String type = buildInfos.substring(bip1 + 2, bip2);
 						
 				bip1 = buildInfos.indexOf("<td class=\"downloadLink\">", bip2);
@@ -150,7 +168,7 @@ public class BuildDatabase {
 				bip1 = buildInfos.indexOf(" href=\"", bip2);
 				bip2 = buildInfos.indexOf("\">", bip1);
 				String url = buildInfos.substring(bip1 + 7, bip2);
-						
+				
 				try {
 					Build b = new Build(Integer.valueOf(build),
 							            version,
@@ -164,9 +182,9 @@ public class BuildDatabase {
 						if (buildInDB != null){
 							UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, 100));
 							return false;
-						}else builds.add(b);
+						}else buildDBContent.add(b);
 							
-					}else builds.add(0, b);
+					}else buildDBContent.add(0, b);
 					
 				} catch (Exception e) {
 					UpdateCraft.sendConsoleMessage(Text.DATABASE_INVALIDBUILD);
@@ -177,23 +195,72 @@ public class BuildDatabase {
 				e.printStackTrace();
 			}
 
-		}while (buildInfoIndex + buildInfos.length() < versionTable.length());
+		}while ((buildInfoIndex + buildInfos.length()) < versionTable.length());
 		
 		return true;  
 	}
 	
 	public void printDB(){
-		for (Build build : builds) {
+		for (Build build : buildDBContent) {
 			System.out.println(build.toString());
 		}
 	}
 
 	public void clearDatabase() {
-		builds.clear();
+		buildDBContent.clear();
 	}
 
 	public boolean removeBuild(Build build) {
-		return builds.remove(build);
+		return buildDBContent.remove(build);
+	}
+	
+	public void save(){
+		
+		PrintWriter pw = null;
+		
+		try {
+			File directory = new File(buildDBPath);
+			if (! directory.exists()) directory.mkdir();
+			
+			pw = new PrintWriter(new FileWriter(buildDBPath + "/BDB.txt"));
+			
+			pw.write("#\r\n");
+			pw.write(String.format("# %s\r\n", UpdateCraft.get().getDescription().getName()));
+			pw.write(String.format("# Version: %s\r\n", UpdateCraft.get().getDescription().getVersion()));
+			pw.write(String.format("# Author: %s\r\n", UpdateCraft.get().getDescription().getAuthors()));
+			pw.write("#\r\n");
+			pw.write("# Build Database\r\n");
+			pw.write("#\r\n");
+			pw.write("#   Version: 1.0\r\n");
+			pw.write(String.format("#   Date:    %1$te/%1$tm/%1$tY at %1$tH:%1$tM:%1$tS\r\n", new Date()));
+			pw.write("#\r\n");
+			
+			for (Build build : buildDBContent) {
+				
+				//:   2555 ; 1.4.7-R0.4      ; development     ; http://dl.[...].org[...]   
+				
+				String fileFormatLine = ": %6s ; %-15s ; %-15s ; %s \r\n";
+				String dbFileLine = String.format(fileFormatLine, 
+						build.getBuildnumber(),
+						build.getVersion(),
+						build.getCannel(),
+						build.getUrl());
+				
+				pw.write(dbFileLine);
+			}
+			pw.write("#\r\n");
+			pw.write("# EOF\r\n");
+			pw.write("#\r\n");
+		} catch (Exception e) {
+
+			e.printStackTrace();
+		
+		}finally{
+			try {
+				if (pw != null) pw.close();
+			} catch (Exception e) {}
+		}
+		
 	}
 	
 }

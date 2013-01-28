@@ -4,6 +4,7 @@ package de.MrX13415.UpdateCraft.Command;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
+import de.MrX13415.UpdateCraft.UpdateCraft;
 import de.MrX13415.UpdateCraft.Command.SubCommand.Command_Database;
 import de.MrX13415.UpdateCraft.Command.SubCommand.Command_Download;
 
@@ -18,7 +19,7 @@ public class Command_Updatecraft extends UCCommand{
 
 	@Override
 	public boolean command(CommandSender sender, Command cmd, String label, String[] args) {
-
+		UpdateCraft.get().getBuildDatabase().save();
 		return false;
 	}
 		

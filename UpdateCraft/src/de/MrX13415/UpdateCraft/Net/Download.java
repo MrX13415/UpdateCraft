@@ -93,9 +93,11 @@ public class Download implements Runnable{
  		conn.setInstanceFollowRedirects(false);
 		
 		// Set request properties
- 		conn.setRequestProperty("User-Agent", UpdateCraft.get().getNameSpecial() + " " + 
- 												UpdateCraft.get().getServer().getName()+"/"+
- 												UpdateCraft.get().getServer().getVersion());
+ 		try {
+ 			conn.setRequestProperty("User-Agent", UpdateCraft.get().getNameSpecial() + " " + 
+													UpdateCraft.get().getServer().getName()+"/"+
+													UpdateCraft.get().getServer().getVersion());
+		} catch (Exception e) {}
  		
 		conn.setRequestProperty("Accept-Encoding", "gzip, deflate");
 		conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");

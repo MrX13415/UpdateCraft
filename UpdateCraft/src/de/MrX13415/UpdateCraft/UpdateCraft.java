@@ -1,7 +1,6 @@
 package de.MrX13415.UpdateCraft;
 
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
@@ -115,23 +114,13 @@ public class UpdateCraft extends JavaPlugin{
 	
 	
 	
-	
-	public void doo(){
-		try {
-			Downloade(new URL("https://github.com/MrX13415/Massband/blob/master/README"));
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 		
-	}
-	
 	
 	public static void main(String[] aregs){
 			
 	UpdateCraft u = new UpdateCraft();
-	u.doo();
+
+		u.getBuildDatabase().createDatabase();
 	
 //		System.out.println("Geting builds ...");
 //		BuildDatabase db = new BuildDatabase();
@@ -210,7 +199,11 @@ public class UpdateCraft extends JavaPlugin{
 
 	
 	public String getNameSpecial(){
-		return getDescription().getName() + "/" + getDescription().getVersion();
+		try {
+			return getDescription().getName() + "/" + getDescription().getVersion();	
+		} catch (Exception e) {
+			return "UpdateCraft/<version>";
+		}
 	}
 
 	public static UpdateCraft get() {
@@ -218,8 +211,13 @@ public class UpdateCraft extends JavaPlugin{
 	}
 	
 	public static void sendConsoleMessage(String message) {
-		updateCraft.getServer().getConsoleSender().sendMessage("[" + updateCraft.getDescription().getName() + "] " + message);
-		
+		try {
+			updateCraft.getServer().getConsoleSender().sendMessage("[" + updateCraft.getDescription().getName() + "] " + message);
+
+		} catch (Exception e) {
+			System.out.println("[UpdateCraft] " + message);
+			
+		}
 	}
 	
 }
