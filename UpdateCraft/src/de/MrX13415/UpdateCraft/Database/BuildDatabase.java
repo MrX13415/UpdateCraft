@@ -1,15 +1,17 @@
 package de.MrX13415.UpdateCraft.Database;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 import de.MrX13415.UpdateCraft.UpdateCraft;
+import de.MrX13415.UpdateCraft.Database.Build.Cannel;
 import de.MrX13415.UpdateCraft.Net.Download;
 import de.MrX13415.UpdateCraft.Net.Download.Destionation;
 import de.MrX13415.UpdateCraft.Net.Download.NotInitializedException;
@@ -31,12 +33,17 @@ public class BuildDatabase {
 		return null;
 	}
 	
+	
+	public Build getLatestBuild(){
+		return getLatestBuild(null);
+	}
+	
 	public Build getLatestBuild(Build.Cannel cannal){
 		int latestBuildNummber = 0;
 		Build latestBuild = null;
 		
 		for (Build build : buildDBContent) {
-			if (build.getCannel() == cannal){
+			if (cannal == null || build.getCannel() == cannal){
 				if (build.getBuildnumber() > latestBuildNummber){
 					latestBuildNummber = build.getBuildnumber();
 					latestBuild = build;
@@ -44,18 +51,21 @@ public class BuildDatabase {
 			}
 		}
 		return latestBuild;
+	}	
+	
+	public void updateDatabaseFull(){
+		createDatabase(false, true);
 	}
 	
-	
 	public void updateDatabase(){
-		createDatabase(false);
+		createDatabase(false, false);
 	}
 	
 	public void createDatabase(){
-		createDatabase(true);
+		createDatabase(true, false);
 	}
 	
-	public void createDatabase(final boolean reCreate){
+	public void createDatabase(final boolean reCreate, final boolean fullUpdate){
 		
 		Thread uDBT = new Thread(new Runnable() {
 			
@@ -72,7 +82,7 @@ public class BuildDatabase {
 					try {
 						dl = new Download(url);
 					} catch (MalformedURLException e) {
-						UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_ERROR1, url));
+						UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_INVALID_URL, url));
 						e.printStackTrace();
 						break;
 					}
@@ -93,7 +103,7 @@ public class BuildDatabase {
 					String page = dl.getContent();
 					
 					findPageCount(page);
-					if (!AddBulidsFromPageToDatabase(page, reCreate)) break;
+					if (!AddBulidsFromPageToDatabase(page, reCreate, fullUpdate)) break;
 					
 					int perc = (int) Math.round((100d / (double)pageCount) * i);
 					UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, perc));
@@ -116,7 +126,7 @@ public class BuildDatabase {
 		pageCount = Integer.valueOf(pcStr);
 	}
 	
-	public boolean AddBulidsFromPageToDatabase(String page, boolean all){
+	public boolean AddBulidsFromPageToDatabase(String page, boolean all, boolean fullUpdate){
 	
 		//grep out the version table out of the page ...
 		int p1 = page.indexOf("<table class=\"versionsTable\">");
@@ -179,15 +189,23 @@ public class BuildDatabase {
 						
 						Build buildInDB = getBuild(b.getBuildnumber());
 						
-						if (buildInDB != null){
-							UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, 100));
-							return false;
-						}else buildDBContent.add(b);
+						if (fullUpdate){
+							if (buildInDB == null){
+								buildDBContent.add(b);
+							}else {
+								continue; 
+							}
+						}else{
+							if (buildInDB != null){
+								UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, 100));
+								return false;
+							}else buildDBContent.add(b);
+						}
 							
 					}else buildDBContent.add(0, b);
 					
 				} catch (Exception e) {
-					UpdateCraft.sendConsoleMessage(Text.DATABASE_INVALIDBUILD);
+					UpdateCraft.sendConsoleMessage(Text.DATABASE_INVALID_BUILD);
 					e.printStackTrace();
 				}
 			} catch (Exception e) {
@@ -214,7 +232,62 @@ public class BuildDatabase {
 		return buildDBContent.remove(build);
 	}
 	
+	public void load(){
+		
+		UpdateCraft.sendConsoleMessage(Text.DATABASE_LOAD);
+		
+		BufferedReader br = null;
+		
+		try {
+			File bdbf = new File(buildDBPath + "/BDB.txt");
+			br = new BufferedReader(new FileReader(bdbf));
+	
+			int lineIndex = 0;
+			
+			while (br.ready()) {
+				String line = br.readLine();
+				lineIndex++;
+				
+				if (!line.startsWith(":")) continue;
+				
+				String[] build = line.trim().substring(1).split(";");
+				
+				Build b = null;
+				int bN = 0;
+				String bV = "";
+				Cannel bC = Cannel.Unknown;
+				URL bU = null;
+				
+				try {
+					bN = Integer.valueOf(build[0].trim());
+					bV = build[1].trim();
+					bC = Build.Cannel.valueOf(build[2].trim());
+					bU = new URL(build[3].trim());
+					
+					b = new Build(bN, bV, bC, bU);		
+				} catch (Exception e) {
+					UpdateCraft.sendConsoleMessage(Text.get(
+							Text.DATABASE_INVALID_BUILD,
+							Text.get(Text.DATABASE_LOAD_INV_BUILD_POS,
+									bdbf.getName(), lineIndex)));
+					continue;
+				}			
+				
+				if (getBuild(bN) != null) continue;
+				buildDBContent.add(b);
+			}
+			
+			UpdateCraft.sendConsoleMessage(Text.DATABASE_LOAD_DONE);
+		} catch (Exception e) {
+			UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_LOAD_ERROR, e));
+			e.printStackTrace();
+		}
+
+	}
+	
 	public void save(){
+		
+		UpdateCraft.sendConsoleMessage(Text.DATABASE_SAVE);
 		
 		PrintWriter pw = null;
 		
@@ -251,10 +324,10 @@ public class BuildDatabase {
 			pw.write("#\r\n");
 			pw.write("# EOF\r\n");
 			pw.write("#\r\n");
+			
+			UpdateCraft.sendConsoleMessage(Text.DATABASE_SAVE_DONE);
 		} catch (Exception e) {
-
-			e.printStackTrace();
-		
+			UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_SAVE_ERROR, e));
 		}finally{
 			try {
 				if (pw != null) pw.close();

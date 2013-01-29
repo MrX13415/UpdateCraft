@@ -19,7 +19,7 @@ public class Command_Updatecraft extends UCCommand{
 
 	@Override
 	public boolean command(CommandSender sender, Command cmd, String label, String[] args) {
-		UpdateCraft.get().getBuildDatabase().save();
+		UpdateCraft.get().getBuildDatabase().load();
 		return false;
 	}
 		

@@ -120,7 +120,7 @@ public class UpdateCraft extends JavaPlugin{
 			
 	UpdateCraft u = new UpdateCraft();
 
-		u.getBuildDatabase().createDatabase();
+		u.getBuildDatabase().load();
 	
 //		System.out.println("Geting builds ...");
 //		BuildDatabase db = new BuildDatabase();
