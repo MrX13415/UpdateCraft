@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -21,10 +22,12 @@ import de.MrX13415.UpdateCraft.Text.Text;
 
 public class BuildDatabase {
 
-	private String buildDBPath = "plugins/UpdateCraft/";
+	private String bdbFileName = "BuildDB.yml";
 	
 	private ArrayList<Build> buildDBContent = new ArrayList<Build>();
 	private int pageCount = 1;
+
+	private Thread uDBT = new Thread();
 	
 	public Build getBuild(int buildnummber){
 		for (Build build : buildDBContent) {
@@ -67,7 +70,7 @@ public class BuildDatabase {
 	
 	public void createDatabase(final boolean reCreate, final boolean fullUpdate){
 		
-		Thread uDBT = new Thread(new Runnable() {
+		uDBT = new Thread(new Runnable() {
 			
 			@Override
 			public void run() {
@@ -113,8 +116,10 @@ public class BuildDatabase {
 			}
 		});
 		
-		uDBT.setName(UpdateCraft.get().getNameSpecial() + "#UpdateDatabase");
-		uDBT.start();
+		if (!uDBT.isAlive()){
+			uDBT.setName(UpdateCraft.get().getNameSpecial() + "#UpdateDatabase");
+			uDBT.start();
+		}
 	}
 	
 	public void findPageCount(String page){
@@ -239,7 +244,7 @@ public class BuildDatabase {
 		BufferedReader br = null;
 		
 		try {
-			File bdbf = new File(buildDBPath + "/BDB.txt");
+			File bdbf = new File(UpdateCraft.get().getPluginFilesDir() + bdbFileName);
 			br = new BufferedReader(new FileReader(bdbf));
 	
 			int lineIndex = 0;
@@ -281,7 +286,12 @@ public class BuildDatabase {
 		} catch (Exception e) {
 			UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_LOAD_ERROR, e));
 			e.printStackTrace();
+		}finally{
+			try {
+				if(br != null) br.close();
+			} catch (IOException e) {}
 		}
+		
 
 	}
 	
@@ -292,10 +302,10 @@ public class BuildDatabase {
 		PrintWriter pw = null;
 		
 		try {
-			File directory = new File(buildDBPath);
+			File directory = new File(UpdateCraft.get().getPluginFilesDir());
 			if (! directory.exists()) directory.mkdir();
 			
-			pw = new PrintWriter(new FileWriter(buildDBPath + "/BDB.txt"));
+			pw = new PrintWriter(new FileWriter(UpdateCraft.get().getPluginFilesDir() + bdbFileName));
 			
 			pw.write("#\r\n");
 			pw.write(String.format("# %s\r\n", UpdateCraft.get().getDescription().getName()));

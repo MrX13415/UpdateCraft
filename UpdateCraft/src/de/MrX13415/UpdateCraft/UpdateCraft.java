@@ -1,14 +1,15 @@
 package de.MrX13415.UpdateCraft;
 
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
-import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.MrX13415.UpdateCraft.Command.Command_Restart;
 import de.MrX13415.UpdateCraft.Command.Command_Updatecraft;
+import de.MrX13415.UpdateCraft.Config.Config;
 import de.MrX13415.UpdateCraft.Database.BuildDatabase;
 import de.MrX13415.UpdateCraft.Net.Download;
 import de.MrX13415.UpdateCraft.Net.Download.Destionation;
@@ -19,14 +20,20 @@ import de.MrX13415.UpdateCraft.Net.Download.NotInitializedException;
  * @author Oliver
  *
  *c-log: * cmd code improvemens ...
+ *  * add: config
+ *  * working restart cmd...
+ *  
  *
  */
 public class UpdateCraft extends JavaPlugin{
 
+	private String pluginFilesDir = "plugins/UpdateCraft/";
+	
 	private static UpdateCraft updateCraft;
 	
 	private BuildDatabase buildDatabase = new BuildDatabase();
-	
+	private ArrayList<BuildDownload> buildDLs = new ArrayList<>(); 
+	private Config config = new Config();
 	
 	
 	public UpdateCraft() {
@@ -36,7 +43,7 @@ public class UpdateCraft extends JavaPlugin{
 
 	@Override
 	public void onDisable() {
-		
+		config.save();
 	}
 	
 	@Override
@@ -48,53 +55,20 @@ public class UpdateCraft extends JavaPlugin{
 	@Override
 	public void onEnable() {  
 		
+		
+		
         //register events ...
 //        getServer().getPluginManager().registerEvents(pListener, this);
 //        getServer().getPluginManager().registerEvents(bListener, this);
 //        getServer().getPluginManager().registerEvents(eListener, this);
-
-		
-		
-		
-		
-		/* /UpdateCraft database 
-		 *                       update
-		 *              
-		 *              download
-		 *                       buildnummber 
-		 *                       rec...
-		 *                       beta...
-		 *                       devel...
-		 *              
-		 *              
-		 *             
-		 *              
-		 */
-
 		
 		//register commands ...
 		try {
 			
-			PluginCommand updatecraft;
-			updatecraft = this.getCommand("updatecraft");
-			updatecraft.setExecutor(new Command_Updatecraft());
-			updatecraft.setUsage("");
-			updatecraft.setDescription("");
-			
-			PluginCommand restart;
-			restart = this.getCommand("restart");
-			restart.setExecutor(new Command_Restart(this));
-			restart.setUsage("");
-			restart.setDescription("");
-			
-			ArrayList<String> aliases = new ArrayList<>();
-			aliases.add("uc");
-			aliases.add("ucraft");
-			aliases.add("udc");
-			aliases.add("upc");
-			
-			updatecraft.setAliases(aliases);
-			
+			Command_Updatecraft cmd_UC = new Command_Updatecraft();
+			cmd_UC.initPluginCommand();
+			Command_Restart cmd_R = new Command_Restart();
+			cmd_R.initPluginCommand();
 			
 		} catch (Exception e) {
 			getLogger().warning("[" + getDescription().getName() + "] Error: Commands not definated in 'plugin.yml'");
@@ -104,33 +78,39 @@ public class UpdateCraft extends JavaPlugin{
 		
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-		
-	
-	public static void main(String[] aregs){
-			
-	UpdateCraft u = new UpdateCraft();
+	public static void main(String[] args){
 
-		u.getBuildDatabase().load();
-	
-//		System.out.println("Geting builds ...");
-//		BuildDatabase db = new BuildDatabase();
-//		db.updateDatabase();
-//		
-//		Build b = db.getLatestBuild(Build.Cannel.Recommended);
-//		System.out.println("Latest build: ");
-//		System.out.println(b.toString());
-//
-//		Downloade(b.getUrl());
+		if (args.length > 0){
+			if (args[0].equalsIgnoreCase("--restart_server")){
+			
+				System.out.println("");
+				System.out.println("[Minecraft][Bukkit][UpdateCraft] Starting in 10 seconds ...");
+				System.out.println("");
+				
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {}
+				
+				System.out.println("[Minecraft][Bukkit][UpdateCraft] Starting in 05 seconds ...");
+				System.out.println("");
+				
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e) {}
+				
+				System.out.println("");
+				System.out.println("[Minecraft][Bukkit][UpdateCraft] Starting server ...");
+				System.out.println("");
+				
+				System.out.println("[Minecraft][Bukkit][UpdateCraft] Executing: " + new Config().getServerStartCommand());
+				
+			    try {
+					Runtime.getRuntime().exec(new Config().getServerStartCommand());
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		
 	}
 
@@ -191,13 +171,6 @@ public class UpdateCraft extends JavaPlugin{
 		
 	}
 	
-	
-	
-	public BuildDatabase getBuildDatabase() {
-		return buildDatabase;
-	}
-
-	
 	public String getNameSpecial(){
 		try {
 			return getDescription().getName() + "/" + getDescription().getVersion();	
@@ -206,18 +179,54 @@ public class UpdateCraft extends JavaPlugin{
 		}
 	}
 
+	public static void sendConsoleMessage(String message) {
+		try {
+			
+			String[] lines = message.split("\n");
+			
+			for (String line : lines) {
+				updateCraft.getServer().getConsoleSender().sendMessage("[" + updateCraft.getDescription().getName() + "] " + line);
+			}
+			
+		} catch (Exception e) {
+			System.out.println("[UpdateCraft] " + message);
+		}
+	}
+
 	public static UpdateCraft get() {
 		return updateCraft;
 	}
 	
-	public static void sendConsoleMessage(String message) {
-		try {
-			updateCraft.getServer().getConsoleSender().sendMessage("[" + updateCraft.getDescription().getName() + "] " + message);
+	public String getPluginFilesDir() {
+		return pluginFilesDir;
+	}
 
-		} catch (Exception e) {
-			System.out.println("[UpdateCraft] " + message);
-			
-		}
+	public void setPluginFilesDir(String pluginFilesDir) {
+		this.pluginFilesDir = pluginFilesDir;
+	}
+
+	public BuildDatabase getBuildDatabase() {
+		return buildDatabase;
+	}
+
+	public Config getUpdateConfig() {
+		return config;
+	}
+
+	public ArrayList<BuildDownload> getBuildDownloads() {
+		return buildDLs;
+	}
+
+	public void addBuildDownload(BuildDownload buildDL) {
+		this.buildDLs.add(buildDL);
+	}
+
+	public void removeBuildDownload(BuildDownload buildDL) {
+		this.buildDLs.remove(buildDL);
+	}
+	
+	public void removeBuildDownload(int index) {
+		this.buildDLs.remove(index);
 	}
 	
 }

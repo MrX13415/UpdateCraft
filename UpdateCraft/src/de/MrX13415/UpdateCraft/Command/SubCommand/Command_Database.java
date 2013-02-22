@@ -19,7 +19,9 @@ public class Command_Database extends UCCommand{
 	public Command_Database() {
 		super();
 		
-		setAliases("database", "db");
+		setLabel("database");
+		setAliases("db");
+		setDescription("Manage the UpdateCraft database");
 		
 		add(new Command_Update(),
 			new Command_UpdateFull(),

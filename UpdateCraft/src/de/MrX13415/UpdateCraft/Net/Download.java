@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
 import de.MrX13415.UpdateCraft.UpdateCraft;
+import de.MrX13415.UpdateCraft.Text.Text;
 
 
 public class Download implements Runnable{
@@ -28,7 +30,7 @@ public class Download implements Runnable{
 	// **** Source / Destination ****
 	private URL sourceUrl;
 	private Destionation destionation = Destionation.BinFile;
-	private String destionationDir = "downloads/";
+	private String destionationDir = UpdateCraft.get().getPluginFilesDir() + "downloads/";
 	private String destionationFile = "file.bin"; 
 	private File destionationPath = new File(destionationDir, destionationFile);
 	private String content;
@@ -54,9 +56,11 @@ public class Download implements Runnable{
 	private long endTime;			// in ms
 	private long runTime;		// in ms
 	private double speed;			// in bytes
+	private boolean doStop;
 	
 	// **** Information ****
 	private String encoding = "";
+	private Exception error;
 	
 	public Download(String url) throws MalformedURLException{
 		this(new URL(url));
@@ -72,15 +76,15 @@ public class Download implements Runnable{
 		try {
 			initConnection();
 		} catch (IOException e) {
-			System.err.println("Can not initialize connection: ");
-			e.printStackTrace();
+			UpdateCraft.sendConsoleMessage(Text.get(Text.CONNECTION_ERROR1, e));
+			error = e;
 		}
 		
 		try {
 			initDestination();
 		} catch (IOException e) {
-			System.err.println("Can not initialize destination: ");
-			e.printStackTrace();
+			UpdateCraft.sendConsoleMessage(Text.get(Text.CONNECTION_ERROR2, e));
+			error = e;
 		}
 		
 		state = State.Initialized;
@@ -187,7 +191,7 @@ public class Download implements Runnable{
 	}
 	
 	public void stop(){
-		
+		doStop = true;
 	} 
 	
 	public void pause(){
@@ -288,10 +292,10 @@ public class Download implements Runnable{
 				
 				calculatePrecentage();
 				
-			}while (bytesReaded >= 0);
+			}while (bytesReaded >= 0 && !doStop);
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			error = e;
 		}finally{
 			close();
 			state = State.Stoped;

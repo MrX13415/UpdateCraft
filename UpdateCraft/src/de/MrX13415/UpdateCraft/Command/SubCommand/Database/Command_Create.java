@@ -12,7 +12,9 @@ public class Command_Create extends UCCommand{
 	public Command_Create() {
 		super();
 		
-		setAliases("create", "cr", "crt");
+		setLabel("create");
+		setAliases("cr", "crt");
+		setDescription("(Re)Create the database");
 	}
 
 	@Override

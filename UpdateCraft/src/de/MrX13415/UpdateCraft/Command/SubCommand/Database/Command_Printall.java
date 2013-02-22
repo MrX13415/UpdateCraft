@@ -12,7 +12,9 @@ public class Command_Printall extends UCCommand{
 	public Command_Printall() {
 		super();
 		
-		setAliases("printall", "pa", "prtall");
+		setLabel("printall");
+		setAliases("pa", "prtall");
+		setDescription("Prints the database content to the console");
 	}
 
 	@Override

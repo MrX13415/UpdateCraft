@@ -12,7 +12,9 @@ public class Command_Update extends UCCommand{
 	public Command_Update() {
 		super();
 		
-		setAliases("update", "u", "ud", "up");
+		setLabel("update");
+		setAliases("u", "ud", "up");
+		setDescription("Check for and add newer builds");
 	}
 
 	@Override

@@ -5,6 +5,7 @@ import java.text.DecimalFormat;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
+import de.MrX13415.UpdateCraft.BuildDownload;
 import de.MrX13415.UpdateCraft.UpdateCraft;
 import de.MrX13415.UpdateCraft.Command.UCCommand;
 import de.MrX13415.UpdateCraft.Database.Build;
@@ -19,13 +20,15 @@ public class Command_Download extends UCCommand{
 	public Command_Download() {
 		super();
 		
-		setAliases("download", "dl");
+		setLabel("download");
+		setAliases("dl");
+		setUsage("<<buildChannel>|<buildNumber>>");
+		setDescription("Download latest build from a channel or a specific one");
 	}
 	
 	@Override
 	public boolean command(CommandSender sender, Command cmd, String label, String[] args) {
 		if (args.length > 0){
-			System.out.println(args[0]);
 			onCommandDownload(sender, cmd, label, args);
 		}
 		
@@ -67,12 +70,12 @@ public class Command_Download extends UCCommand{
 				build.getCannel(),
 				build.getVersion()));
 				
-		download(build);
+		download(build, sender);
 		
 		return true;
 	}
 	
-	private void download(final Build build){
+	private void download(final Build build, final CommandSender sender){
 		
 		Thread dlT = new Thread(new Runnable() {
 			@Override
@@ -87,29 +90,46 @@ public class Command_Download extends UCCommand{
 				
 				d.initialize();
 				
+				BuildDownload bdl = new BuildDownload(build, d);
+				UpdateCraft.get().addBuildDownload(bdl);
+				
 				try {
 					d.start();
 				} catch (NotInitializedException e1) {
 					e1.printStackTrace();
 				}
 				
+				
+				int senderTimeCounter = 0;
+				int msToWait = 1000;
+				
 				while (!d.isStoped()) {
 					if (d != null) {
-						UpdateCraft.sendConsoleMessage(Text.get(Text.DOWNLOAD_PROGRESS, build.getBuildnumber(),
+						String output = Text.get(Text.DOWNLOAD_PROGRESS, build.getBuildnumber(),
 								new DecimalFormat("0.00").format(d.getProgress()),
 								Download.humanReadableByteCount(d.getByteProgress()),
 								Download.humanReadableByteCount(d.getByteSize()),
-								Download.humanReadableByteCount((long) d.getSpeed())));
+								Download.humanReadableByteCount((long) d.getSpeed()));
+		
+						UpdateCraft.sendConsoleMessage(output);
+						
+						
+						if (senderTimeCounter >= 5000){
+							senderTimeCounter = 0;
+							if (sender != null) sender.sendMessage(output);
+						}
 					}
 					
-					try {Thread.sleep(1000);} catch (InterruptedException e) {}
+					try {Thread.sleep(msToWait);} catch (InterruptedException e) {}
+					senderTimeCounter += msToWait;
 				}
+				
 				UpdateCraft.sendConsoleMessage(Text.DONE);
+				
 			}
 		});
 		dlT.setName(UpdateCraft.get().getNameSpecial() + "#Download");
 		dlT.start();
 		
 	}
-	
 }

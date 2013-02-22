@@ -12,7 +12,10 @@ public class Command_Remove extends UCCommand{
 	public Command_Remove() {
 		super();
 		
-		setAliases("remove", "r", "rm");
+		setLabel("remove");
+		setAliases("r", "rm");
+		setUsage("<buildNumber>");
+		setDescription("Remove a build from the database");
 	}
 	
 	@Override

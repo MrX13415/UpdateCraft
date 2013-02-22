@@ -12,7 +12,9 @@ public class Command_Clear extends UCCommand{
 	public Command_Clear() {
 		super();
 		
-		setAliases("clear", "clr", "cl");
+		setLabel("clear");
+		setAliases("clr", "cl");
+		setDescription("Clear the database");
 	}
 
 	@Override
