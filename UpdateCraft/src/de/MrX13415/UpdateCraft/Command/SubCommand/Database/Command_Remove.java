@@ -29,7 +29,7 @@ public class Command_Remove extends UCCommand{
 			}		
 		}
 			
-		return false;
+		return true;
 	}
 
 }

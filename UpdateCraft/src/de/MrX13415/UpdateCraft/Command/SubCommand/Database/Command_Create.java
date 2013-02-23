@@ -22,7 +22,7 @@ public class Command_Create extends UCCommand{
 		
 		UpdateCraft.get().getBuildDatabase().createDatabase();
 
-		return false;
+		return true;
 	}
 
 }

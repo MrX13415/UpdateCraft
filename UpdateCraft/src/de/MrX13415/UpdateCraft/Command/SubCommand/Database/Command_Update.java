@@ -14,7 +14,7 @@ public class Command_Update extends UCCommand{
 		
 		setLabel("update");
 		setAliases("u", "ud", "up");
-		setDescription("Check for and add newer builds");
+		setDescription("Check for newer builds and add them to the database");
 	}
 
 	@Override
@@ -22,7 +22,7 @@ public class Command_Update extends UCCommand{
 		
 		UpdateCraft.get().getBuildDatabase().updateDatabase();
 		
-		return false;
+		return true;
 	}
 
 }

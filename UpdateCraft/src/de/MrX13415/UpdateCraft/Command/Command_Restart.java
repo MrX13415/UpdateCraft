@@ -78,7 +78,8 @@ public class Command_Restart extends UCCommand{
 		}		
 		
 		restartThread.start();
-		return false;
+		
+		return true;
 	}
 	
 	private void restart(CommandSender sender){
@@ -104,7 +105,7 @@ public class Command_Restart extends UCCommand{
 	    try {
 			Runtime.getRuntime().exec(UpdateCraft.get().getUpdateConfig().getServerRestartServiceCommand());
 		} catch (IOException e) {
-			e.printStackTrace();
+			if (UpdateCraft.get().isDebug()) e.printStackTrace();
 		}
 	}
 		

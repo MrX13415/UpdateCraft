@@ -5,10 +5,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.MrX13415.UpdateCraft.Command.Command_Restart;
 import de.MrX13415.UpdateCraft.Command.Command_Updatecraft;
+import de.MrX13415.UpdateCraft.Command.SubCommand.Database.Command_Save;
 import de.MrX13415.UpdateCraft.Config.Config;
 import de.MrX13415.UpdateCraft.Database.BuildDatabase;
 import de.MrX13415.UpdateCraft.Net.Download;
@@ -31,6 +33,10 @@ public class UpdateCraft extends JavaPlugin{
 	
 	private static UpdateCraft updateCraft;
 	
+	//**** DEBUG ****
+	private boolean debug = false;
+	//***************
+	
 	private BuildDatabase buildDatabase = new BuildDatabase();
 	private ArrayList<BuildDownload> buildDLs = new ArrayList<>(); 
 	private Config config = new Config();
@@ -44,11 +50,13 @@ public class UpdateCraft extends JavaPlugin{
 	@Override
 	public void onDisable() {
 		config.save();
+		buildDatabase.save();
 	}
 	
 	@Override
 	public void onLoad() {
-		
+		config.load();
+		buildDatabase.load();
 	}
 	
 	
@@ -107,21 +115,21 @@ public class UpdateCraft extends JavaPlugin{
 			    try {
 					Runtime.getRuntime().exec(new Config().getServerStartCommand());
 				} catch (IOException e) {
-					e.printStackTrace();
+					if (UpdateCraft.get().isDebug()) e.printStackTrace();
 				}
 			}
 		}
 		
 	}
 
-	
+	@Deprecated
 	public static void Downloade(URL url){
 		
 		Download d = null;
 		try {
 			d = new Download(url); //"http://download.opensuse.org/distribution/10.2/iso/dvd/openSUSE-10.2-GM-DVD-x86_64.iso");//https://github.com/MrX13415/Massband/raw/master/release/Massband.zip");
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (UpdateCraft.get().isDebug()) e.printStackTrace();
 		}
 		
 		d.setDestionation(Destionation.StringVar);
@@ -131,7 +139,7 @@ public class UpdateCraft extends JavaPlugin{
 			d.start();
 		} catch (NotInitializedException e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			if (UpdateCraft.get().isDebug()) e1.printStackTrace();
 		}
 		
 		//d.start(1024*1024*1024);
@@ -158,7 +166,7 @@ public class UpdateCraft extends JavaPlugin{
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				if (UpdateCraft.get().isDebug()) e.printStackTrace();
 			}
 		}
 		System.out.println("Done");
@@ -179,6 +187,13 @@ public class UpdateCraft extends JavaPlugin{
 		}
 	}
 
+	/** Send a message to the server console<br><br>
+	 * Full color support with <code>ChatColor</code>
+	 * Multi-line support<br><br>
+	 * The message looks like: <br>
+	 *    <code>[UpdateCraft] This is a message!</code><br>
+	 * @param message
+	 */
 	public static void sendConsoleMessage(String message) {
 		try {
 			
@@ -189,10 +204,41 @@ public class UpdateCraft extends JavaPlugin{
 			}
 			
 		} catch (Exception e) {
-			System.out.println("[UpdateCraft] " + message);
+			System.out.println("[" + updateCraft.getDescription().getName() + "] " + message);
 		}
 	}
-
+	
+	/** Sends a message to the given sender<br>
+	 * (Player or CONSOLE)<br><br>
+	 * Full color support with <code>ChatColor</code>
+	 * @param sender The Sender 
+	 * @param message The Message
+	 */
+	public static void sendMessage(CommandSender sender, String message) {
+		if (sender.equals(sender.getServer().getConsoleSender())) 
+			UpdateCraft.sendConsoleMessage(message);
+		else
+			sender.sendMessage(message);		
+	}
+	
+	/**Send a message to the console and the sender
+	 * 
+	 * @param sender
+	 * @param message
+	 */
+	public static void sendMessageBoth(CommandSender sender, String message) {
+		if (sender.equals(sender.getServer().getConsoleSender())) 
+			UpdateCraft.sendConsoleMessage(message);
+		else{
+			sendConsoleMessage(message);
+			sender.sendMessage(message);
+		}
+	}
+	
+	public static void sendMessageAll(String message) {
+		get().getServer().broadcastMessage(message);
+	}
+	
 	public static UpdateCraft get() {
 		return updateCraft;
 	}
@@ -227,6 +273,14 @@ public class UpdateCraft extends JavaPlugin{
 	
 	public void removeBuildDownload(int index) {
 		this.buildDLs.remove(index);
+	}
+
+	public boolean isDebug() {
+		return debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
 	}
 	
 }

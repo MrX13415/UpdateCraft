@@ -7,12 +7,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
-
+@Deprecated
 public class HTTP {
 
 	boolean pout = true;
 	HTTP thiso = this;
 	
+	@Deprecated
 	public String getPage(String urlStr){
 //		System.out.print("Receave the file: ");
 		try{

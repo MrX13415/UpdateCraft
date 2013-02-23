@@ -23,7 +23,7 @@ public class Command_Clear extends UCCommand{
 		
 		UpdateCraft.get().getBuildDatabase().clearDatabase();
 		
-		return false;
+		return true;
 	}
 
 }

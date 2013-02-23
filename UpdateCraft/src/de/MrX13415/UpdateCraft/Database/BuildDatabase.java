@@ -74,9 +74,11 @@ public class BuildDatabase {
 			
 			@Override
 			public void run() {
+				UpdateCraft.sendMessageAll(Text.DATABASE_UPDATE_START);
+				
 				if (reCreate) buildDBContent.clear();
 						
-				UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, 0));
+				UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE_PROCESS, 0));
 				
 				for (int i = 1; i <= pageCount; i++) {
 					String url = "http://dl.bukkit.org/downloads/craftbukkit/?page="+i;
@@ -86,7 +88,7 @@ public class BuildDatabase {
 						dl = new Download(url);
 					} catch (MalformedURLException e) {
 						UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_INVALID_URL, url));
-						e.printStackTrace();
+						if (UpdateCraft.get().isDebug()) e.printStackTrace();
 						break;
 					}
 					dl.getDlThread().setName(UpdateCraft.get().getNameSpecial()+"#Download"+dl.toString());
@@ -109,10 +111,10 @@ public class BuildDatabase {
 					if (!AddBulidsFromPageToDatabase(page, reCreate, fullUpdate)) break;
 					
 					int perc = (int) Math.round((100d / (double)pageCount) * i);
-					UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, perc));
+					UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE_PROCESS, perc));
 				}
-				UpdateCraft.sendConsoleMessage(Text.DONE);
-				
+				UpdateCraft.sendMessageAll(Text.DATABASE_UPDATE_COMPLETED);
+				save();
 			}
 		});
 		
@@ -202,7 +204,7 @@ public class BuildDatabase {
 							}
 						}else{
 							if (buildInDB != null){
-								UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE, 100));
+								UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_UPDATE_PROCESS, 100));
 								return false;
 							}else buildDBContent.add(b);
 						}
@@ -211,11 +213,11 @@ public class BuildDatabase {
 					
 				} catch (Exception e) {
 					UpdateCraft.sendConsoleMessage(Text.DATABASE_INVALID_BUILD);
-					e.printStackTrace();
+					if (UpdateCraft.get().isDebug()) e.printStackTrace();
 				}
 			} catch (Exception e) {
 				UpdateCraft.sendConsoleMessage(Text.DATABASE_NOMOREBUILD);
-				e.printStackTrace();
+				if (UpdateCraft.get().isDebug()) e.printStackTrace();
 			}
 
 		}while ((buildInfoIndex + buildInfos.length()) < versionTable.length());
@@ -285,7 +287,7 @@ public class BuildDatabase {
 			UpdateCraft.sendConsoleMessage(Text.DATABASE_LOAD_DONE);
 		} catch (Exception e) {
 			UpdateCraft.sendConsoleMessage(Text.get(Text.DATABASE_LOAD_ERROR, e));
-			e.printStackTrace();
+			if (UpdateCraft.get().isDebug()) e.printStackTrace();
 		}finally{
 			try {
 				if(br != null) br.close();

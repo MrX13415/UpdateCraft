@@ -22,7 +22,7 @@ public class Command_Printall extends UCCommand{
 		
 		UpdateCraft.get().getBuildDatabase().printDB();
 
-		return false;
+		return true;
 	}
 
 

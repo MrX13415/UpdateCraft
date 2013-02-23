@@ -28,11 +28,12 @@ public class Command_Download extends UCCommand{
 	
 	@Override
 	public boolean command(CommandSender sender, Command cmd, String label, String[] args) {
+		boolean retval = false;
 		if (args.length > 0){
-			onCommandDownload(sender, cmd, label, args);
+			retval = onCommandDownload(sender, cmd, label, args);
 		}
 		
-		return false;
+		return retval;
 	}
 
 	public boolean onCommandDownload(CommandSender sender, Command cmd, String label, String[] args) {
@@ -45,8 +46,7 @@ public class Command_Download extends UCCommand{
 			
 			build = db.getLatestBuild(cannel);
 			
-			UpdateCraft.sendConsoleMessage(
-					Text.get(Text.DOWNLOAD_BUILD_LATEST, build.getCannel()));
+			UpdateCraft.sendMessageBoth(sender, Text.get(Text.DOWNLOAD_BUILD_LATEST, build.getCannel()));
 
 		}else{
 			try{
@@ -55,16 +55,16 @@ public class Command_Download extends UCCommand{
 				build = db.getBuild(buildnr);
 				
 				if (build == null){
-					UpdateCraft.sendConsoleMessage(Text.get(Text.DOWNLOAD_BUILD_NOTFOUND, buildnr));
+					UpdateCraft.sendMessageBoth(sender, Text.get(Text.DOWNLOAD_BUILD_NOTFOUND, buildnr));
 					return true;
 				}
 			}catch(NumberFormatException e){
-				UpdateCraft.sendConsoleMessage(Text.get(Text.DOWNLOAD_CANNEL_NOTFOUND, args[0]));
+				UpdateCraft.sendMessageBoth(sender, Text.get(Text.DOWNLOAD_CANNEL_NOTFOUND, args[0]));
 				return true;
 			}
 		}
 		
-		UpdateCraft.sendConsoleMessage(
+		UpdateCraft.sendMessageBoth(sender,
 				Text.get(Text.DOWNLOAD_BUILD_INFO,
 				build.getBuildnumber(),
 				build.getCannel(),
@@ -85,7 +85,7 @@ public class Command_Download extends UCCommand{
 				try {
 					d = new Download(build.getUrl()); //"http://download.opensuse.org/distribution/10.2/iso/dvd/openSUSE-10.2-GM-DVD-x86_64.iso");//https://github.com/MrX13415/Massband/raw/master/release/Massband.zip");
 				} catch (Exception e) {
-					e.printStackTrace();
+					if (UpdateCraft.get().isDebug()) e.printStackTrace();
 				}
 				
 				d.initialize();
@@ -95,8 +95,9 @@ public class Command_Download extends UCCommand{
 				
 				try {
 					d.start();
+					UpdateCraft.sendMessageBoth(sender, Text.get(Text.DOWNLOAD_START, build.getBuildnumber()));
 				} catch (NotInitializedException e1) {
-					e1.printStackTrace();
+					if (UpdateCraft.get().isDebug()) e1.printStackTrace();
 				}
 				
 				
@@ -116,7 +117,7 @@ public class Command_Download extends UCCommand{
 						
 						if (senderTimeCounter >= 5000){
 							senderTimeCounter = 0;
-							if (sender != null) sender.sendMessage(output);
+							if (sender != null) UpdateCraft.sendMessage(sender, output);
 						}
 					}
 					
@@ -124,11 +125,11 @@ public class Command_Download extends UCCommand{
 					senderTimeCounter += msToWait;
 				}
 				
-				UpdateCraft.sendConsoleMessage(Text.DONE);
+				UpdateCraft.sendMessageBoth(sender, Text.get(Text.DOWNLOAD_COMPLETED, build.getBuildnumber()));
 				
 			}
 		});
-		dlT.setName(UpdateCraft.get().getNameSpecial() + "#Download");
+		dlT.setName(UpdateCraft.get().getNameSpecial() + "#Download/");
 		dlT.start();
 		
 	}
